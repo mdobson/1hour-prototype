@@ -17,6 +17,8 @@
       logging: true
     });
 
+    var landmarks = null;
+
     function queryLandmarks(loc) {
       var lat = loc.coords.latitude;
       var lon = loc.coords.longitude;
@@ -33,29 +35,33 @@
         }
       };
 
-      var landmarks = new Apigee.Collection(options);
+      landmarks = new Apigee.Collection(options);
       landmarks.fetch(function(error, result) {
         if(error) {
           alert("We've had an error!");
         } else {
           $("#landmarks").empty();
-          var tag = 1;
-          while(landmarks.hasNextEntity()) {
-            var landmark = landmarks.getNextEntity();
-            var name = landmark.get("resource");
-            var city = landmark.get("city");
-            var landmarkLocation = landmark.get("location");
-
-            var template = "<li><h4>"+tag+")."+name+"</h4><p>"+city+"</p></li>";
-            staticMapLink += "&markers=color:blue%7Clabel:"+tag+"%7C"+landmarkLocation.latitude+","+landmarkLocation.longitude;
-            $("#landmarks").append(template);
-            tag++;
-          }
+          appendLandmarks();
           $("#landmarks").listview("refresh");
-          $("#map").attr("src", staticMapLink);
+          //$("#map").attr("src", staticMapLink);
         }
       });
 
+    }
+
+    function appendLandmarks() {
+      //var tag = 1;
+      while(landmarks.hasNextEntity()) {
+        var landmark = landmarks.getNextEntity();
+        var name = landmark.get("resource");
+        var city = landmark.get("city");
+        var landmarkLocation = landmark.get("location");
+
+        var template = "<li><h4>"+name+"</h4><p>"+city+"</p></li>";
+        //staticMapLink += "&markers=color:blue%7Clabel:"+tag+"%7C"+landmarkLocation.latitude+","+landmarkLocation.longitude;
+        $("#landmarks").append(template);
+        //tag++;
+      }
     }
 
     function addNewLocation(loc) {
@@ -90,6 +96,16 @@
       $("#submit").live("click", function() {
         navigator.geolocation.getCurrentPosition(addNewLocation);
       });
+      $("#more").live("click", function(){
+        landmarks.getNextPage(function(error, response){
+          if(error) {
+            console.log("There was an error");
+          } else {
+            appendLandmarks();
+            $("#landmarks").listview("refresh");
+          }
+        });
+      });
     });
   </script>
   <body>
@@ -101,12 +117,14 @@
         <a href="#addLandmark" data-role="button" class="ui-btn-right" data-rel="dialog" data-icon="pos">Add</a>
       </div>
       <div data-role="content">
-        <img height="200" width="400" id="map"/>
+        <!-- <img height="200" width="400" id="map"/> -->
         <ul data-role="listview" id="landmarks">
           <li>
             <h3>Landmark 1</h3>
             <p>Location 1</p>
           </li>
+        </ul>
+        <button id="more">More Results</button>
       </div>
     </div>
     <div data-role="page" id="addLandmark">
