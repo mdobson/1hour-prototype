@@ -12,23 +12,24 @@
   <script src="apigee.js"></script>
   <script>
     var apigee = new Apigee.Client({
-      orgName:"mdobson",
+      orgName:"mtraining",
       appName:"sandbox",
       logging: true
     });
 
     var landmarks = null;
+    var staticMapLink = null;
 
     function queryLandmarks(loc) {
       var lat = loc.coords.latitude;
       var lon = loc.coords.longitude;
 
-      var staticMapLink = "http://maps.googleapis.com/maps/api/staticmap?center="+lat+","+lon+"&zoom=15&size=400x200&sensor=false";
+      staticMapLink = "http://maps.googleapis.com/maps/api/staticmap?center="+lat+","+lon+"&zoom=15&size=400x200&sensor=false";
 
       var query = "where location within 1500 of "+ lat + "," + lon;
 
       var options = {
-        type:"landmarks",
+        type:"museums",
         client:apigee,
         qs: {
           ql: query
@@ -43,24 +44,25 @@
           $("#landmarks").empty();
           appendLandmarks();
           $("#landmarks").listview("refresh");
-          //$("#map").attr("src", staticMapLink);
+          $("#map").attr("src", staticMapLink);
+          $("#map").show();
         }
       });
 
     }
 
     function appendLandmarks() {
-      //var tag = 1;
+      var tag = 1;
       while(landmarks.hasNextEntity()) {
         var landmark = landmarks.getNextEntity();
-        var name = landmark.get("resource");
+        var name = landmark.get("museum");
         var city = landmark.get("city");
         var landmarkLocation = landmark.get("location");
 
-        var template = "<li><h4>"+name+"</h4><p>"+city+"</p></li>";
-        //staticMapLink += "&markers=color:blue%7Clabel:"+tag+"%7C"+landmarkLocation.latitude+","+landmarkLocation.longitude;
+        var template = "<li><h4>"+tag+")."+name+"</h4><p>"+city+"</p></li>";
+        staticMapLink += "&markers=color:blue%7Clabel:"+tag+"%7C"+landmarkLocation.latitude+","+landmarkLocation.longitude;
         $("#landmarks").append(template);
-        //tag++;
+        tag++;
       }
     }
 
@@ -72,8 +74,8 @@
       var city = $("#city").val();
 
       var options = {
-        type: "landmarks",
-        resource: name,
+        type: "museums",
+        museum: name,
         city: city,
         location: {
           latitude:lat,
@@ -92,6 +94,7 @@
     }
 
     $(document).ready(function(){
+      $("#map").hide();
       navigator.geolocation.getCurrentPosition(queryLandmarks);
       $("#submit").live("click", function() {
         navigator.geolocation.getCurrentPosition(addNewLocation);
@@ -117,7 +120,7 @@
         <a href="#addLandmark" data-role="button" class="ui-btn-right" data-rel="dialog" data-icon="pos">Add</a>
       </div>
       <div data-role="content">
-        <!-- <img height="200" width="400" id="map"/> -->
+        <img height="200" width="400" id="map"/>
         <ul data-role="listview" id="landmarks">
           <li>
             <h3>Landmark 1</h3>
