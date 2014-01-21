@@ -11,23 +11,31 @@
   <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
   <script src="apigee.js"></script>
   <script>
+    //Step 1: We'll begin by initializing the client object.
+    //This client object will be responsible for interacting with the API and storing any credentials we need.
     var apigee = new Apigee.Client({
       orgName:"mtraining",
       appName:"sandbox",
       logging: true
     });
 
+    //We want to have our landmarks variable and our staticMapLink variable in the outer scope.
+    //They are mentioned in a few different functions.
     var landmarks = null;
     var staticMapLink = null;
 
+    //Here is the success callback for getCurrentPosition. This will allow us to look up stuff based on latlon
+    //The function itself will fetch landmarks with a geoloc query and build the googlemaps static map link based on the data.
     function queryLandmarks(loc) {
       var lat = loc.coords.latitude;
       var lon = loc.coords.longitude;
 
       staticMapLink = "http://maps.googleapis.com/maps/api/staticmap?center="+lat+","+lon+"&zoom=15&size=400x200&sensor=false";
 
+      //Geo-loc query
       var query = "where location within 1500 of "+ lat + "," + lon;
 
+      //Different collection options
       var options = {
         type:"museums",
         client:apigee,
@@ -36,6 +44,7 @@
         }
       };
 
+      //Here we use an apigee collection object to get multiple objects from our data store.
       landmarks = new Apigee.Collection(options);
       landmarks.fetch(function(error, result) {
         if(error) {
@@ -51,6 +60,9 @@
 
     }
 
+    //This function is for appending landmarks to the page. We loop through everything
+    //using the built in functionality of the Apigee SDK. We add data to the staticMapsLink variable
+    //and the list of landmarks that will appear on the page.
     function appendLandmarks() {
       var tag = 1;
       while(landmarks.hasNextEntity()) {
@@ -66,6 +78,7 @@
       }
     }
 
+    //Simple function to add a new location. It will also tag the added location with a latlon of the users current position.
     function addNewLocation(loc) {
       var lat = loc.coords.latitude;
       var lon = loc.coords.longitude;
@@ -93,6 +106,7 @@
       });
     }
 
+    //Document ready event. They wire up event handlers for adding landmarks, and retrieving the geolocation data.
     $(document).ready(function(){
       $("#map").hide();
       navigator.geolocation.getCurrentPosition(queryLandmarks);
@@ -112,11 +126,14 @@
     });
   </script>
   <body>
+    <!-- JQuery Mobile pages. These pages will be the top level elements of your app -->
     <div data-role="page">
+      <!-- JQuery Mobile uses data attributes to signify any context in your app. Pages, Headers, Content, and any other UI widgets you could possibly want. -->
       <div data-role="header">
         <h3>
           Historical Landmarks!
         </h3>
+        <!-- JQuery Mobile uses anchor tags pointing at ids to create a single page webapp. -->
         <a href="#addLandmark" data-role="button" class="ui-btn-right" data-rel="dialog" data-icon="pos">Add</a>
       </div>
       <div data-role="content">
